@@ -12,6 +12,11 @@
         <button a-on:click.prevent="console.log($event)">What does the greeting say?</button>
     </div>
 
+    <div a-data="{ show: false }">
+        <button a-on:click.prevent="show = !show">Toggle</button>
+        <p a-show="show">I'm showing!</p>
+    </div>
+
     <div a-data="loop">
         <p a-text="JSON.stringify(items)"></p>
 

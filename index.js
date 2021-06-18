@@ -86,6 +86,9 @@ function walk(el, data, extras = {}) {
             case "a-text":
                 handleText(el, attr.expression, data, extras);
                 break
+            case "a-show":
+                handleShow(el, attr.expression, data, extras);
+                break
             case "a-on":
                 handleOn(el, attr.value, attr.modifiers, attr.expression, data, extras)
                 break
@@ -101,6 +104,18 @@ function walk(el, data, extras = {}) {
             walk(child, data, extras);
         });
     }
+}
+
+function handleShow(el, expression, data, extras) {
+    effect(() => {
+        let result = evaluate(expression, data, extras)
+
+        if (!! result) {
+            el.style.display = 'block'
+        } else {
+            el.style.display = 'none'
+        }
+    })
 }
 
 function handleFor(el, expression, data, extras) {
