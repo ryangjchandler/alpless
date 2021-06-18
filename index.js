@@ -72,31 +72,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function walk(el, data) {
-    if (el.children.length > 0) {
-        Array.from(el.children).forEach((child) => {
-            walk(child, data);
-        });
-    }
-
+function walk(el, data, extras = {}) {
     const attributes = Array.from(el.attributes).filter(
         (attr) => attr.name.startsWith("a-") && attr.name !== "a-data"
     ).map(
         (attr) => parseAttr(attr)
     );
 
+    let walkChildren = true
+
     attributes.forEach((attr) => {
         switch (attr.name) {
             case "a-text":
-                handleText(el, attr.expression, data);
+                handleText(el, attr.expression, data, extras);
                 break
             case "a-on":
-                handleOn(el, attr.value, attr.modifiers, attr.expression, data)
+                handleOn(el, attr.value, attr.modifiers, attr.expression, data, extras)
+                break
+            case "a-for":
+                walkChildren = false
+                handleFor(el, attr.expression, data, extras)
+                break
         }
     });
+
+    if (el.children.length > 0 && walkChildren) {
+        Array.from(el.children).forEach((child) => {
+            walk(child, data, extras);
+        });
+    }
 }
 
-function handleOn(el, event, modifiers, expression, data) {
+function handleFor(el, expression, data, extras) {
+    let [iterator, iterable] = expression.split('in').map(_ => _.trim())
+
+    el.__template = el.children[0]
+    el.removeChild(el.children[0])
+
+    effect(() => {
+        el.textContent = ''
+
+        const items = evaluate(iterable, data, extras)
+
+        if (!Array.isArray(items)) {
+            return
+        }
+
+        items.forEach(i => {
+            const node = document.importNode(el.__template)
+
+            walk(node, data, { [iterator]: i })
+
+            el.appendChild(node)
+        })
+    })
+}
+
+function handleOn(el, event, modifiers, expression, data, extras) {
     el.addEventListener(event, ($event) => {
         if (modifiers.includes('prevent')) {
             $event.preventDefault()
@@ -107,7 +139,8 @@ function handleOn(el, event, modifiers, expression, data) {
         }
 
         evaluate(expression, data, {
-            '$event': $event
+            '$event': $event,
+            ...extras
         })
     })
 }
@@ -124,9 +157,9 @@ function parseAttr(attr) {
     }
 }
 
-function handleText(el, expression, data) {
+function handleText(el, expression, data, extras) {
     effect(() => {
-        el.innerText = evaluate(expression, data);
+        el.innerText = evaluate(expression, data, extras);
     });
 }
 

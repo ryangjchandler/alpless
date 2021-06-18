@@ -11,5 +11,27 @@
         <p a-text="greeting"></p>
         <button a-on:click.prevent="console.log($event)">What does the greeting say?</button>
     </div>
+
+    <div a-data="loop">
+        <p a-text="JSON.stringify(items)"></p>
+
+        <button a-on:click.prevent="items.push('bob')">Add Item</button>
+
+        <ul a-for="item in items">
+            <li a-text="item"></li>
+        </ul>
+    </div>
+
+    <script>
+        function loop() {
+            return {
+                items: [
+                    'Ryan',
+                    'John',
+                    'Bill'
+                ]
+            }
+        }
+    </script>
 </body>
 </html>
